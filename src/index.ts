@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import compression from "compression";
 import http from "http";
-import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import router from "./router";
@@ -15,20 +14,29 @@ app.use(
     credentials: true,
   })
 );
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(express.json());
+app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 server.listen(8080, () => {
   console.log("App is running on http://localhost:8080");
 });
-
+app.get("/", (req, res) => {
+  return res.send(req.get("User-Agent"));
+});
 const uri =
   "mongodb+srv://james:gv2l3njUpPju4qId@cluster0.udkivev.mongodb.net/?retryWrites=true&w=majority";
 async function connectDatabase() {
   try {
-    mongoose.connect(uri);
-    console.log("database connected");
+    const res = await mongoose.connect(uri);
+    if (res) {
+      console.log("database connected");
+    }
+    mongoose.connection.on("error", () => {
+      console.log("cannot connect to database");
+    });
   } catch (err) {
     console.error(err);
   }
